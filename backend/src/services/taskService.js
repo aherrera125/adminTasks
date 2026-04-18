@@ -1,9 +1,9 @@
-import { getAllTasks, createTask as createTaskModel } from '../models/taskModel.js';
+import { getAllTasks, createTask as createTask } from '../models/taskModel.js';
 
 export const listTasks = async () => {
   return await getAllTasks();
 };
 
-export const createTask = async (taskData) => {
-  return await createTaskModel(taskData);
+export const addTask = async (taskData) => {
+  return await createTask(taskData);
 };

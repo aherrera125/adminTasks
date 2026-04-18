@@ -1,4 +1,4 @@
-import { listTasks, createTask } from '../services/taskService.js';
+import { listTasks, addTask } from '../services/taskService.js';
 
 export const getTasks = async (req, res) => {
   try {
@@ -18,7 +18,7 @@ export const createTask = async (req, res) => {
       return res.status(400).json({ ok: false, error: 'title, description and due_date are required' });
     }
 
-    const task = await createTask({ title, description, due_date });
+    const task = await addTask({ title, description, due_date });
     return res.status(201).json({ ok: true, data: task });
   } catch (error) {
     console.error(error);
