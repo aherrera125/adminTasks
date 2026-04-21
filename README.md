@@ -48,6 +48,108 @@ La conexión usa variables de entorno en `.env`. Los valores por defecto son:
 - `DB_HOST=localhost`
 - `DB_USER=root`
 - `DB_PASSWORD=TU_PASSWORD`
+
+## API Endpoints
+
+La API proporciona endpoints para gestionar tareas administrativas. Todos los endpoints están bajo la ruta base `/api/tasks`.
+
+### GET /api/tasks
+
+Recupera todas las tareas existentes.
+
+**Respuesta exitosa (200):**
+```json
+{
+  "ok": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Tarea de ejemplo",
+      "description": "Descripción de la tarea",
+      "due_date": "2023-12-31",
+      "status": "pending",
+      "created_at": "2023-10-01T00:00:00.000Z",
+      "updated_at": "2023-10-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Respuesta de error (500):**
+```json
+{
+  "ok": false,
+  "error": "Error fetching tasks"
+}
+```
+
+### POST /api/tasks
+
+Crea una nueva tarea.
+
+**Cuerpo de la solicitud (JSON):**
+```json
+{
+  "title": "Nueva tarea",
+  "description": "Descripción detallada",
+  "due_date": "2023-12-31"
+}
+```
+
+**Campos requeridos:**
+- `title` (string): Título de la tarea
+- `description` (string): Descripción de la tarea
+- `due_date` (string): Fecha de vencimiento en formato YYYY-MM-DD
+
+**Respuesta exitosa (201):**
+```json
+{
+  "ok": true,
+  "data": {
+    "id": 2,
+    "title": "Nueva tarea",
+    "description": "Descripción detallada",
+    "due_date": "2023-12-31",
+    "status": "pending",
+    "created_at": "2023-10-01T00:00:00.000Z",
+    "updated_at": "2023-10-01T00:00:00.000Z"
+  }
+}
+```
+
+**Respuesta de error (400 - Campos faltantes):**
+```json
+{
+  "ok": false,
+  "error": "title, description and due_date are required"
+}
+```
+
+**Respuesta de error (500):**
+```json
+{
+  "ok": false,
+  "error": "Error creating task"
+}
+```
+}
+```
+
+**Respuesta de error (400 - Campos faltantes):**
+```json
+{
+  "ok": false,
+  "error": "title, description and due_date are required"
+}
+```
+
+**Respuesta de error (500):**
+```json
+{
+  "ok": false,
+  "error": "Error creating task"
+}
+```
 - `DB_NAME=adminTasks`
 - `DB_PORT=3306`
 
