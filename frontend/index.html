@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Tasks</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Admin Tasks</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pending-section">Pendientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#completed-section">Completadas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#rejected-section">Rechazadas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">       
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Crear Nueva Tarea</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Título</label>
+                                <input type="text" class="form-control" id="title" placeholder="Ingresa el título de la tarea" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="description" rows="3" placeholder="Ingresa la descripción de la tarea" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="due_date" class="form-label">Fecha de Vencimiento</label>
+                                <input type="date" class="form-control" id="due_date" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crear Tarea</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card pending-tasks mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Tareas Pendientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">No hay tareas pendientes.</p>
+                        <!-- Aquí se listarán las tareas pendientes -->
+                    </div>
+                </div>
+                <div class="card completed-tasks mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Tareas Completadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">No hay tareas completadas.</p>
+                        <!-- Aquí se listarán las tareas completadas -->
+                    </div>
+                </div>
+                <div class="card rejected-tasks">
+                    <div class="card-header">
+                        <h5 class="card-title">Tareas Rechazadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">No hay tareas rechazadas.</p>
+                        <!-- Aquí se listarán las tareas rechazadas -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS (opcional, ya que no hay JS aún) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
