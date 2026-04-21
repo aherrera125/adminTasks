@@ -1,0 +1,31 @@
+:root {
+    --pastel-blue: #AEC6CF;
+    --pastel-green: #77DD77;
+    --pastel-yellow: #FFFF99;
+    --pastel-red: #FFB3BA;
+}
+html {
+    scroll-behavior: smooth;
+}
+body {
+    background-color: #333;
+}
+.pending-tasks {
+    background-color: var(--pastel-yellow);
+}
+.completed-tasks {
+    background-color: var(--pastel-green);
+}
+.rejected-tasks {
+    background-color: var(--pastel-red);
+}
+.card {
+    margin-bottom: 1rem;
+}
+
+/* Media queries para responsive */
+@media (max-width: 991px) {
+    .col-lg-7, .col-lg-5 {
+        width: 100%;
+    }
+}
