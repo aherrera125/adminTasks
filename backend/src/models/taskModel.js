@@ -20,3 +20,24 @@ export const createTask = async ({ title, description, due_date }) => {
 
   return rows[0];
 };
+
+export const updateTaskStatus = async (id, status) => {
+  console.log('updateTaskStatus called with:', { id, status, type: typeof id });
+  const [result] = await pool.query(
+    `UPDATE tasks SET status = ?, updated_at = NOW() WHERE id = ?`,
+    [status, id]
+  );
+
+  console.log('Update result:', result);
+
+  if (result.affectedRows === 0) {
+    return null;
+  }
+
+  const [rows] = await pool.query(
+    `SELECT id, title, description, due_date, status, created_at, updated_at FROM tasks WHERE id = ?`,
+    [id]
+  );
+
+  return rows[0];
+};
