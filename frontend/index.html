@@ -38,7 +38,7 @@
                         <h5 class="card-title">Crear Nueva Tarea</h5>
                     </div>
                     <div class="card-body">
-                        <form>
+                        <form id="create-task-form">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Título</label>
                                 <input type="text" class="form-control" id="title" placeholder="Ingresa el título de la tarea" required>
@@ -80,6 +80,24 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Modal para ver detalles de tarea -->
+    <div class="modal fade" id="taskDetailModal" tabindex="-1" aria-labelledby="taskDetailModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="taskDetailModalLabel">Detalle de Tarea</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="taskDetailContent"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Bootstrap 5 JS (opcional, ya que no hay JS aún) -->

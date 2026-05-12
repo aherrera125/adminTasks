@@ -2,7 +2,7 @@
 async function fetchTasks() {
   console.log('=== INICIANDO FETCHTASKS ===');
   try {
-    const response = await fetch('http://localhost:3000/api/tasks');
+    const response = await fetch('/api/tasks');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -15,6 +15,19 @@ async function fetchTasks() {
   }
 }
 
+// Función para ordenar tareas por fecha de vencimiento (descendente - más lejanas primero)
+function sortByDueDate(tasks) {
+  return tasks.sort((a, b) => {
+    if (!a.due_date && !b.due_date) return 0;
+    if (!a.due_date) return -1;
+    if (!b.due_date) return 1;
+    return new Date(b.due_date) - new Date(a.due_date);
+  });
+}
+
+let currentModalTask = null;
+let currentModalEditing = false;
+
 // Función para renderizar tareas
 function renderTasks(tasks) {
   console.log('Renderizando tareas:', tasks);
@@ -23,9 +36,14 @@ function renderTasks(tasks) {
     return;
   }
   // Separar tareas por status
-  const pendingTasks = tasks.filter(task => task.status === 'pending');
-  const completedTasks = tasks.filter(task => task.status === 'completed');
-  const rejectedTasks = tasks.filter(task => task.status === 'rejected');
+  let pendingTasks = tasks.filter(task => task.status === 'pending');
+  let completedTasks = tasks.filter(task => task.status === 'completed');
+  let rejectedTasks = tasks.filter(task => task.status === 'rejected');
+
+  // Ordenar cada grupo por fecha de vencimiento
+  pendingTasks = sortByDueDate(pendingTasks);
+  completedTasks = sortByDueDate(completedTasks);
+  rejectedTasks = sortByDueDate(rejectedTasks);
 
   console.log('Pendientes:', pendingTasks.length, 'Completadas:', completedTasks.length, 'Rechazadas:', rejectedTasks.length);
   console.log('Tareas pendientes:', JSON.stringify(pendingTasks));
@@ -50,9 +68,12 @@ function renderTaskGroup(taskList, containerId) {
   container.innerHTML = '';
 
   if (taskList.length === 0) {
-    // Si es el grupo de pendientes y no hay tareas
     if (containerId.includes('pending')) {
       container.innerHTML = '<p class="text-muted">No hay tareas pendientes.</p>';
+    } else if (containerId.includes('completed')) {
+      container.innerHTML = '<p class="text-muted">No hay tareas completadas.</p>';
+    } else if (containerId.includes('rejected')) {
+      container.innerHTML = '<p class="text-muted">No hay tareas rechazadas.</p>';
     } else {
       container.innerHTML = '<p class="text-muted">No hay tareas.</p>';
     }
@@ -61,8 +82,10 @@ function renderTaskGroup(taskList, containerId) {
 
   // Determinar si es el grupo de pendientes
   const isPending = containerId.includes('pending');
-  console.log('Es grupo pendientes:', isPending);
-  console.log('Container id:', containerId);
+  const isCompleted = containerId.includes('completed');
+  const isRejected = containerId.includes('rejected');
+  
+  console.log('Tipo grupo - Pendientes:', isPending, 'Completadas:', isCompleted, 'Rechazadas:', isRejected);
 
   // Crear cards para cada tarea
   taskList.forEach(task => {
@@ -70,25 +93,45 @@ function renderTaskGroup(taskList, containerId) {
     const taskCard = document.createElement('div');
     taskCard.className = 'card mb-2';
     
-    let buttonsHtml = '';
-    console.log('isPending para tarea', task.id, ':', isPending);
+    let cardContent = '';
     if (isPending) {
-      buttonsHtml = `
-        <div class="d-flex gap-2 mt-2">
-          <button class="btn btn-success btn-sm" onclick="updateStatus(${task.id}, 'completed')">Completada</button>
-          <button class="btn btn-danger btn-sm" onclick="updateStatus(${task.id}, 'rejected')">Rechazada</button>
+      // Solo nombre, fecha y botón Detalle para tareas pendientes
+      const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
+      const dueDateClass = task.due_date ? (new Date(task.due_date) < new Date() ? 'text-danger fw-bold' : 'text-muted') : 'text-muted';
+      
+      cardContent = `
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div style="flex: 1;">
+              <h6 class="card-title mb-2">${task.title}</h6>
+              <small class="${dueDateClass}">📅 ${dueDate}</small>
+            </div>
+            <button type="button" class="btn btn-info btn-sm ms-2 task-detail-button">Detalle</button>
+          </div>
+        </div>
+      `;
+    } else if (isCompleted || isRejected) {
+      const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
+      const dueDateClass = task.due_date ? (new Date(task.due_date) < new Date() ? 'text-danger fw-bold' : 'text-muted') : 'text-muted';
+      
+      cardContent = `
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div style="flex: 1;">
+              <h6 class="card-title mb-2">${task.title}</h6>
+              <small class="${dueDateClass}">📅 ${dueDate}</small>
+            </div>
+            <button type="button" class="btn btn-info btn-sm ms-2 task-detail-button">Detalle</button>
+          </div>
         </div>
       `;
     }
     
-    taskCard.innerHTML = `
-      <div class="card-body">
-        <h6 class="card-title">${task.title}</h6>
-        <p class="card-text">${task.description}</p>
-        <small class="text-muted">Vence: ${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Sin fecha'}</small>
-        ${buttonsHtml}
-      </div>
-    `;
+    taskCard.innerHTML = cardContent;
+    const detailButton = taskCard.querySelector('.task-detail-button');
+    if (detailButton) {
+      detailButton.addEventListener('click', () => openTaskDetail(task.id, task.title, task.description, task.due_date, task.status));
+    }
     console.log('Card HTML:', taskCard.innerHTML);
     container.appendChild(taskCard);
   });
@@ -97,7 +140,8 @@ function renderTaskGroup(taskList, containerId) {
 // Función para actualizar el estado de una tarea
 async function updateStatus(taskId, status) {
   try {
-    const response = await fetch(`http://localhost:3000/api/tasks/${taskId}/status`, {
+    console.log('Actualizando tarea', taskId, 'a estado:', status);
+    const response = await fetch(`/api/tasks/${taskId}/status`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -106,9 +150,11 @@ async function updateStatus(taskId, status) {
     });
     
     const data = await response.json();
+    console.log('Respuesta de actualización:', response.status, data);
     
     if (data.ok) {
-      alert(`Tarea marcada como ${status === 'completed' ? 'completada' : 'rechazada'}`);
+      const statusMessage = status === 'completed' ? 'Completada' : status === 'rejected' ? 'Rechazada' : status;
+      console.log(`Tarea ${taskId} marcada como ${statusMessage}`);
       fetchTasks(); // Recargar las tareas
     } else {
       alert('Error: ' + data.error);
@@ -119,5 +165,210 @@ async function updateStatus(taskId, status) {
   }
 }
 
+// Función para abrir el modal con detalles de la tarea
+function openTaskDetail(taskId, title, description, dueDate, status) {
+  console.log('Abriendo detalle de tarea:', { taskId, title, description, dueDate, status });
+  currentModalTask = { taskId, title, description, dueDate, status };
+  currentModalEditing = false;
+  renderTaskDetailModal();
+
+  const modal = new bootstrap.Modal(document.getElementById('taskDetailModal'));
+  modal.show();
+}
+
+function renderTaskDetailModal() {
+  if (!currentModalTask) return;
+
+  const dueDateFormatted = currentModalTask.dueDate ? new Date(currentModalTask.dueDate).toLocaleDateString('es-ES') : 'Sin fecha';
+  const isDueDatePassed = currentModalTask.dueDate && new Date(currentModalTask.dueDate) < new Date();
+  const isPending = currentModalTask.status === 'pending';
+
+  const content = `
+    <div>
+      <div class="mb-3">
+        <h6 class="text-muted">Título</h6>
+        <p id="taskDetailTitle" class="fw-bold"></p>
+      </div>
+      <div class="mb-3">
+        <h6 class="text-muted">Descripción</h6>
+        <div id="taskDescriptionContainer"></div>
+      </div>
+      <div class="mb-3">
+        <h6 class="text-muted">Fecha de Vencimiento</h6>
+        <p id="taskDetailDueDate" class="${isDueDatePassed ? 'text-danger fw-bold' : ''}">📅 ${dueDateFormatted}</p>
+      </div>
+      <div class="d-flex gap-2 mb-3" id="taskDetailActions"></div>
+    </div>
+  `;
+
+  const contentContainer = document.getElementById('taskDetailContent');
+  contentContainer.innerHTML = content;
+  document.getElementById('taskDetailTitle').textContent = currentModalTask.title;
+
+  const descriptionContainer = document.getElementById('taskDescriptionContainer');
+  if (currentModalEditing) {
+    descriptionContainer.innerHTML = `<textarea id="taskDescriptionInput" class="form-control" rows="4">${currentModalTask.description}</textarea>`;
+  } else {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = currentModalTask.description;
+    descriptionContainer.appendChild(paragraph);
+  }
+
+  const actionContainer = document.getElementById('taskDetailActions');
+  actionContainer.innerHTML = '';
+
+  if (isPending) {
+    const editButton = document.createElement('button');
+    editButton.id = 'editDescriptionBtn';
+    editButton.type = 'button';
+    editButton.className = currentModalEditing ? 'btn btn-primary' : 'btn btn-secondary';
+    editButton.textContent = currentModalEditing ? 'Guardar' : 'Editar';
+    editButton.addEventListener('click', toggleTaskDescriptionEditMode);
+    actionContainer.appendChild(editButton);
+
+    const completeButton = document.createElement('button');
+    completeButton.id = 'completeFromModal';
+    completeButton.type = 'button';
+    completeButton.className = 'btn btn-success';
+    completeButton.textContent = '✓ Completada';
+    completeButton.addEventListener('click', () => {
+      closeTaskDetailModal();
+      updateStatus(currentModalTask.taskId, 'completed');
+    });
+    actionContainer.appendChild(completeButton);
+
+    const rejectButton = document.createElement('button');
+    rejectButton.id = 'rejectFromModal';
+    rejectButton.type = 'button';
+    rejectButton.className = 'btn btn-danger';
+    rejectButton.textContent = '✗ Rechazada';
+    rejectButton.addEventListener('click', () => {
+      closeTaskDetailModal();
+      updateStatus(currentModalTask.taskId, 'rejected');
+    });
+    actionContainer.appendChild(rejectButton);
+  }
+}
+
+async function toggleTaskDescriptionEditMode() {
+  if (!currentModalTask) return;
+
+  if (!currentModalEditing) {
+    currentModalEditing = true;
+    renderTaskDetailModal();
+    return;
+  }
+
+  const input = document.getElementById('taskDescriptionInput');
+  if (!input) return;
+
+  const newDescription = input.value.trim();
+  if (!newDescription) {
+    alert('La descripción no puede quedar vacía.');
+    return;
+  }
+
+  if (newDescription === currentModalTask.description) {
+    currentModalEditing = false;
+    renderTaskDetailModal();
+    return;
+  }
+
+  try {
+    await updateTaskDescription(currentModalTask.taskId, newDescription);
+    currentModalTask.description = newDescription;
+    currentModalEditing = false;
+    renderTaskDetailModal();
+    fetchTasks();
+    alert('Descripción actualizada correctamente.');
+  } catch (error) {
+    console.error('Error guardando descripción:', error);
+    alert('No se pudo actualizar la descripción.');
+  }
+}
+
+async function updateTaskDescription(taskId, description) {
+  const response = await fetch(`/api/tasks/${taskId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ description })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Error updating task description');
+  }
+  return data;
+}
+
+// Función para cerrar el modal de detalles
+function closeTaskDetailModal() {
+  const modal = bootstrap.Modal.getInstance(document.getElementById('taskDetailModal'));
+  if (modal) {
+    modal.hide();
+  }
+}
+
+// Función para crear una nueva tarea
+async function createTask(taskData) {
+  try {
+    console.log('Creando tarea en backend:', taskData);
+    const response = await fetch('/api/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(taskData)
+    });
+
+    const data = await response.json();
+    console.log('Respuesta de creación:', response.status, data);
+
+    if (!response.ok) {
+      throw new Error(data.error || `Error creating task (${response.status})`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error al crear tarea:', error);
+    throw error;
+  }
+}
+
 // Llamar a la función cuando se carga la página
-document.addEventListener('DOMContentLoaded', fetchTasks);
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Frontend listo, cargando tareas y configurando formulario');
+  fetchTasks();
+
+  const form = document.getElementById('create-task-form');
+  if (!form) {
+    console.error('Formulario de creación de tarea no encontrado');
+    return;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    console.log('Formulario enviar tarea');
+
+    const title = document.getElementById('title')?.value.trim();
+    const description = document.getElementById('description')?.value.trim();
+    const due_date = document.getElementById('due_date')?.value;
+
+    if (!title || !description || !due_date) {
+      alert('Completa todos los campos antes de crear la tarea.');
+      return;
+    }
+
+    try {
+      console.log('Datos a enviar:', { title, description, due_date });
+      await createTask({ title, description, due_date });
+      alert('Tarea creada correctamente');
+      form.reset();
+      fetchTasks();
+    } catch (error) {
+      alert(error.message || 'Error al crear la tarea');
+    }
+  });
+});

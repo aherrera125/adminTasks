@@ -4,8 +4,7 @@
   "description": "Frontend for adminTasks",
   "main": "index.html",
   "scripts": {
-    "start": "npx http-server -p 8080",
-    "dev": "npx http-server -p 8080 -o"
+    "start": "npx http-server -a localhost -p 8080 -c-1"
   },
   "keywords": [],
   "author": "",
