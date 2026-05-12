@@ -1,4 +1,4 @@
-import { getAllTasks, createTask as createTask, updateTaskStatus } from '../models/taskModel.js';
+import { getAllTasks, createTask as createTask, updateTaskStatus, updateTask as updateTaskModel } from '../models/taskModel.js';
 
 export const listTasks = async () => {
   return await getAllTasks();
@@ -14,4 +14,8 @@ export const changeTaskStatus = async (id, status) => {
     throw new Error('Invalid status. Must be: pending, completed, or rejected');
   }
   return await updateTaskStatus(id, status);
+};
+
+export const updateTaskDescription = async (id, description) => {
+  return await updateTaskModel(id, { description });
 };
