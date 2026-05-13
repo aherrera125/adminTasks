@@ -18,64 +18,110 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="#pending-section">Pendientes</a>
+                        <a class="nav-link active" href="#" id="nav-home" data-view="home">Inicio</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#completed-section">Completadas</a>
+                        <a class="nav-link" href="#" id="nav-completed" data-view="completed">Completadas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#rejected-section">Rechazadas</a>
+                        <a class="nav-link" href="#" id="nav-rejected" data-view="rejected">Rechazadas</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <div class="container mt-5">       
-        <div class="row">
-            <div class="col-lg-7">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Crear Nueva Tarea</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="create-task-form">
-                            <div class="mb-3">
-                                <label for="title" class="form-label">Título</label>
-                                <input type="text" class="form-control" id="title" placeholder="Ingresa el título de la tarea" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Descripción</label>
-                                <textarea class="form-control" id="description" rows="3" placeholder="Ingresa la descripción de la tarea" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="due_date" class="form-label">Fecha de Vencimiento</label>
-                                <input type="date" class="form-control" id="due_date" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Crear Tarea</button>
-                        </form>
+    <div class="container-fluid mt-5 px-4">
+        <!-- VISTA HOME: Sección de Creación y Tareas de la Semana -->
+        <div id="view-home" class="view-container active">
+            <!-- Sección de Creación de Tareas (Parte Superior) -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Crear Nueva Tarea</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="create-task-form">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="title" class="form-label">Título</label>
+                                        <input type="text" class="form-control" id="title" placeholder="Ingresa el título de la tarea" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="due_date" class="form-label">Fecha de Vencimiento</label>
+                                        <input type="date" class="form-control" id="due_date" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="description" rows="3" placeholder="Ingresa la descripción de la tarea" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Crear Tarea</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="card pending-tasks mb-4" id="pending-section">
-                    <div class="card-header">
-                        <h5 class="card-title">Tareas Pendientes</h5>
-                    </div>
-                    <div class="card-body" id="pending-tasks-container">
-                    </div>
-                </div>
-                <div class="card completed-tasks mb-4" id="completed-section">
-                    <div class="card-header">
-                        <h5 class="card-title">Tareas Completadas</h5>
-                    </div>
-                    <div class="card-body" id="completed-tasks-container">
+
+            <!-- Sección de Tareas en Tres Columnas (Parte Inferior) -->
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card pending-tasks h-100" id="pending-section">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">📋 Tareas Pendientes</h5>
+                        </div>
+                        <div class="card-body" id="pending-tasks-container">
+                        </div>
                     </div>
                 </div>
-                <div class="card rejected-tasks" id="rejected-section">
-                    <div class="card-header">
-                        <h5 class="card-title">Tareas Rechazadas</h5>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card completed-tasks h-100" id="completed-section">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">✅ Completadas (Esta Semana)</h5>
+                        </div>
+                        <div class="card-body" id="completed-tasks-container">
+                        </div>
                     </div>
-                    <div class="card-body" id="rejected-tasks-container">
+                </div>
+                <div class="col-lg-4 col-md-12 mb-4">
+                    <div class="card rejected-tasks h-100" id="rejected-section">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">❌ Rechazadas (Esta Semana)</h5>
+                        </div>
+                        <div class="card-body" id="rejected-tasks-container">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA COMPLETADAS: Todas las tareas completadas -->
+        <div id="view-completed" class="view-container">
+            <div class="container-fluid mt-5 px-4">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h3 class="text-white mb-4">✅ Todas las Tareas Completadas</h3>
+                        <div class="mb-4">
+                            <input type="text" id="filter-completed-input" class="form-control form-control-lg" placeholder="🔍 Buscar tarea por título...">
+                        </div>
+                        <div class="card-body p-0" id="all-completed-tasks-container">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA RECHAZADAS: Todas las tareas rechazadas -->
+        <div id="view-rejected" class="view-container">
+            <div class="container-fluid mt-5 px-4">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h3 class="text-white mb-4">❌ Todas las Tareas Rechazadas</h3>
+                        <div class="mb-4">
+                            <input type="text" id="filter-rejected-input" class="form-control form-control-lg" placeholder="🔍 Buscar tarea por título...">
+                        </div>
+                        <div class="card-body p-0" id="all-rejected-tasks-container">
+                        </div>
                     </div>
                 </div>
             </div>

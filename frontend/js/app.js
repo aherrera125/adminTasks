@@ -1,3 +1,31 @@
+// Variable global para almacenar todas las tareas
+let allTasks = [];
+let filteredCompletedTasks = [];
+let filteredRejectedTasks = [];
+
+// Función para determinar el inicio y fin de la semana en curso
+function getCurrentWeekRange() {
+  const today = new Date();
+  const first = today.getDate() - today.getDay(); // Primer día de la semana (domingo)
+  const last = first + 6; // Último día de la semana (sábado)
+  
+  const weekStart = new Date(today.setDate(first));
+  const weekEnd = new Date(today.setDate(last));
+  
+  weekStart.setHours(0, 0, 0, 0);
+  weekEnd.setHours(23, 59, 59, 999);
+  
+  return { weekStart, weekEnd };
+}
+
+// Función para verificar si una tarea pertenece a la semana en curso
+function isTaskFromCurrentWeek(task) {
+  if (!task.due_date) return false;
+  const taskDate = new Date(task.due_date);
+  const { weekStart, weekEnd } = getCurrentWeekRange();
+  return taskDate >= weekStart && taskDate <= weekEnd;
+}
+
 // Función para obtener tareas desde el backend
 async function fetchTasks() {
   console.log('=== INICIANDO FETCHTASKS ===');
@@ -9,19 +37,20 @@ async function fetchTasks() {
     const data = await response.json();
     console.log('Tareas obtenidas:', data);
     console.log('Data.data:', data.data);
-    renderTasks(data.data || []);
+    allTasks = data.data || [];
+    renderTasks(allTasks);
   } catch (error) {
     console.error('Error al obtener tareas:', error);
   }
 }
 
-// Función para ordenar tareas por fecha de vencimiento (descendente - más lejanas primero)
+// Función para ordenar tareas por fecha de vencimiento (ascendente - más próximas a vencer primero)
 function sortByDueDate(tasks) {
   return tasks.sort((a, b) => {
     if (!a.due_date && !b.due_date) return 0;
-    if (!a.due_date) return -1;
-    if (!b.due_date) return 1;
-    return new Date(b.due_date) - new Date(a.due_date);
+    if (!a.due_date) return 1;
+    if (!b.due_date) return -1;
+    return new Date(a.due_date) - new Date(b.due_date);
   });
 }
 
@@ -48,14 +77,18 @@ function renderTasks(tasks) {
   console.log('Pendientes:', pendingTasks.length, 'Completadas:', completedTasks.length, 'Rechazadas:', rejectedTasks.length);
   console.log('Tareas pendientes:', JSON.stringify(pendingTasks));
 
-  // Renderizar cada grupo
-  renderTaskGroup(pendingTasks, 'pending-tasks-container');
-  renderTaskGroup(completedTasks, 'completed-tasks-container');
-  renderTaskGroup(rejectedTasks, 'rejected-tasks-container');
+  // Renderizar cada grupo - filtrar completadas y rechazadas por semana en vista home
+  renderTaskGroup(pendingTasks, 'pending-tasks-container', false);
+  renderTaskGroup(completedTasks.filter(task => isTaskFromCurrentWeek(task)), 'completed-tasks-container', false);
+  renderTaskGroup(rejectedTasks.filter(task => isTaskFromCurrentWeek(task)), 'rejected-tasks-container', false);
+  
+  // Actualizar vistas completas con filtro
+  updateCompletedTasksView();
+  updateRejectedTasksView();
 }
 
 // Función para renderizar un grupo de tareas en un contenedor
-function renderTaskGroup(taskList, containerId) {
+function renderTaskGroup(taskList, containerId, isAllView = false) {
   console.log('Renderizando grupo:', taskList.length, 'tareas en', containerId);
   const container = document.getElementById(containerId);
   if (!container) {
@@ -102,7 +135,7 @@ function renderTaskGroup(taskList, containerId) {
       cardContent = `
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start">
-            <div style="flex: 1;">
+            <div class="flex-grow">
               <h6 class="card-title mb-2">${task.title}</h6>
               <small class="${dueDateClass}">📅 ${dueDate}</small>
             </div>
@@ -117,7 +150,7 @@ function renderTaskGroup(taskList, containerId) {
       cardContent = `
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start">
-            <div style="flex: 1;">
+            <div class="flex-grow">
               <h6 class="card-title mb-2">${task.title}</h6>
               <small class="${dueDateClass}">📅 ${dueDate}</small>
             </div>
@@ -135,6 +168,88 @@ function renderTaskGroup(taskList, containerId) {
     console.log('Card HTML:', taskCard.innerHTML);
     container.appendChild(taskCard);
   });
+}
+
+// Función para renderizar todas las tareas en vista completa (grid)
+function renderAllTasksView(taskList, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = '';
+
+  if (taskList.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center p-2rem">No hay tareas</p>';
+    return;
+  }
+
+  // Ordenar por fecha
+  const sortedTasks = sortByDueDate([...taskList]);
+
+  const gridContainer = document.createElement('div');
+  gridContainer.className = 'tasks-grid';
+
+  sortedTasks.forEach(task => {
+    const taskCard = document.createElement('div');
+    // Determinar la clase según si es completada o rechazada
+    const isCompleted = task.status === 'completed';
+    const cardClass = isCompleted ? 'task-card task-card-completed' : 'task-card task-card-rejected';
+    taskCard.className = cardClass;
+    
+    const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
+    const isDueDatePassed = task.due_date && new Date(task.due_date) < new Date();
+    const dueDateClass = isDueDatePassed ? 'text-danger fw-bold' : 'text-muted';
+
+    taskCard.innerHTML = `
+      <div>
+        <h6 class="fw-bold mb-2">${task.title}</h6>
+        <p class="small mb-2 text-white-85">${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}</p>
+        <small class="text-white-90">📅 ${dueDate}</small>
+      </div>
+      <div class="mt-3">
+        <button type="button" class="btn btn-sm btn-info task-detail-button-grid">Ver Detalle</button>
+      </div>
+    `;
+
+    taskCard.addEventListener('click', (e) => {
+      if (e.target.closest('.task-detail-button-grid')) {
+        openTaskDetail(task.id, task.title, task.description, task.due_date, task.status);
+      }
+    });
+
+    gridContainer.appendChild(taskCard);
+  });
+
+  container.appendChild(gridContainer);
+}
+
+// Función para filtrar tareas por título
+function filterTasksByTitle(taskList, searchText) {
+  if (!searchText.trim()) {
+    return taskList;
+  }
+  return taskList.filter(task => 
+    task.title.toLowerCase().includes(searchText.toLowerCase())
+  );
+}
+
+// Función para actualizar la vista de tareas completadas
+function updateCompletedTasksView() {
+  const searchInput = document.getElementById('filter-completed-input');
+  const searchText = searchInput ? searchInput.value : '';
+  const completedTasks = allTasks.filter(task => task.status === 'completed');
+  filteredCompletedTasks = filterTasksByTitle(completedTasks, searchText);
+  renderAllTasksView(filteredCompletedTasks, 'all-completed-tasks-container');
+}
+
+// Función para actualizar la vista de tareas rechazadas
+function updateRejectedTasksView() {
+  const searchInput = document.getElementById('filter-rejected-input');
+  const searchText = searchInput ? searchInput.value : '';
+  const rejectedTasks = allTasks.filter(task => task.status === 'rejected');
+  filteredRejectedTasks = filterTasksByTitle(rejectedTasks, searchText);
+  renderAllTasksView(filteredRejectedTasks, 'all-rejected-tasks-container');
 }
 
 // Función para actualizar el estado de una tarea
@@ -280,7 +395,7 @@ async function toggleTaskDescriptionEditMode() {
     currentModalEditing = false;
     renderTaskDetailModal();
     fetchTasks();
-    alert('Descripción actualizada correctamente.');
+    //alert('Descripción actualizada correctamente.');
   } catch (error) {
     console.error('Error guardando descripción:', error);
     alert('No se pudo actualizar la descripción.');
@@ -337,10 +452,58 @@ async function createTask(taskData) {
   }
 }
 
+// Función para cambiar entre vistas
+function switchView(viewName) {
+  console.log('Cambiando a vista:', viewName);
+  
+  // Ocultar todas las vistas
+  document.querySelectorAll('.view-container').forEach(view => {
+    view.classList.remove('active');
+  });
+
+  // Mostrar la vista seleccionada
+  const targetView = document.getElementById(`view-${viewName}`);
+  if (targetView) {
+    targetView.classList.add('active');
+  }
+
+  // Actualizar navegación activa
+  document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+    link.classList.remove('active');
+  });
+  const navLink = document.querySelector(`#nav-${viewName}`);
+  if (navLink) {
+    navLink.classList.add('active');
+  }
+
+  // Scroll al top
+  window.scrollTo(0, 0);
+}
+
 // Llamar a la función cuando se carga la página
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Frontend listo, cargando tareas y configurando formulario');
   fetchTasks();
+
+  // Configurar navegación
+  document.querySelectorAll('[data-view]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const viewName = e.target.getAttribute('data-view');
+      switchView(viewName);
+    });
+  });
+
+  // Configurar filtros de búsqueda
+  const filterCompletedInput = document.getElementById('filter-completed-input');
+  if (filterCompletedInput) {
+    filterCompletedInput.addEventListener('input', updateCompletedTasksView);
+  }
+
+  const filterRejectedInput = document.getElementById('filter-rejected-input');
+  if (filterRejectedInput) {
+    filterRejectedInput.addEventListener('input', updateRejectedTasksView);
+  }
 
   const form = document.getElementById('create-task-form');
   if (!form) {
@@ -364,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       console.log('Datos a enviar:', { title, description, due_date });
       await createTask({ title, description, due_date });
-      alert('Tarea creada correctamente');
+      //alert('Tarea creada correctamente');
       form.reset();
       fetchTasks();
     } catch (error) {
