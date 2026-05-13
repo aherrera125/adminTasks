@@ -10,22 +10,180 @@ html {
 body {
     background-color: #333;
 }
+
+/* Manejo de vistas */
+.view-container {
+    display: none;
+}
+
+.view-container.active {
+    display: block;
+}
+
+/* Vistas de Completadas y Rechazadas con fondo negro */
+#view-completed {
+    background-color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 0;
+    display: none;
+}
+
+#view-completed.active {
+    display: block;
+}
+
+#view-rejected {
+    background-color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 0;
+    display: none;
+}
+
+#view-rejected.active {
+    display: block;
+}
+
 .pending-tasks {
     background-color: var(--pastel-yellow);
+    border-top: 4px solid #FFD700;
 }
 .completed-tasks {
     background-color: var(--pastel-green);
+    border-top: 4px solid #28a745;
 }
 .rejected-tasks {
     background-color: var(--pastel-red);
+    border-top: 4px solid #dc3545;
 }
 .card {
     margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.card-header {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* Estilos para grid de tareas en vista completa */
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.task-card {
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border: none;
+}
+
+.task-card-completed {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.task-card-rejected {
+    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+    color: white;
+}
+
+.task-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    transform: translateY(-4px);
+}
+
+.task-card h6 {
+    color: white;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+}
+
+.task-card .text-muted {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.task-card small {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.task-card .btn-info {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: white;
+    color: white;
+}
+
+.task-card .btn-info:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: white;
+    color: white;
+}
+
+/* Estilos para campo de filtro en vistas oscuras */
+#filter-completed-input,
+#filter-rejected-input {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: white;
+    font-size: 1.1rem;
+}
+
+#filter-completed-input::placeholder,
+#filter-rejected-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+#filter-completed-input:focus,
+#filter-rejected-input:focus {
+    background-color: #333;
+    border-color: #28a745;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
 }
 
 /* Media queries para responsive */
 @media (max-width: 991px) {
-    .col-lg-7, .col-lg-5 {
+    .col-lg-4 {
         width: 100%;
     }
+}
+
+@media (max-width: 767px) {
+    .col-md-6 {
+        width: 100%;
+    }
+    
+    .tasks-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Clases de utilidad para estilos reutilizables */
+.flex-grow {
+    flex: 1;
+}
+
+.p-2rem {
+    padding: 2rem;
+}
+
+.text-white-85 {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.text-white-90 {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.task-title-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
 }
