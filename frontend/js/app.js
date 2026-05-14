@@ -505,6 +505,15 @@ document.addEventListener('DOMContentLoaded', () => {
     filterRejectedInput.addEventListener('input', updateRejectedTasksView);
   }
 
+  // Botón para abrir modal de agregar tarea
+  const addTaskBtn = document.getElementById('add-task-btn');
+  if (addTaskBtn) {
+    addTaskBtn.addEventListener('click', () => {
+      const modal = new bootstrap.Modal(document.getElementById('addTaskModal'));
+      modal.show();
+    });
+  }
+
   const form = document.getElementById('create-task-form');
   if (!form) {
     console.error('Formulario de creación de tarea no encontrado');
@@ -527,7 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       console.log('Datos a enviar:', { title, description, due_date });
       await createTask({ title, description, due_date });
-      //alert('Tarea creada correctamente');
+      // Cerrar modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('addTaskModal'));
+      modal.hide();
       form.reset();
       fetchTasks();
     } catch (error) {
