@@ -1,14 +1,20 @@
 :root {
-    --pastel-blue: #AEC6CF;
-    --pastel-green: #77DD77;
-    --pastel-yellow: #FFFF99;
-    --pastel-red: #FFB3BA;
+    --bg: #121827;
+    --surface: #1f2738;
+    --surface-strong: #2a3349;
+    --surface-soft: #262f44;
+    --text: #eef2ff;
+    --muted: #a4b0d1;
+    --border: rgba(255, 255, 255, 0.08);
+    --accent: #5c7dff;
+    --accent-soft: #4b6ce0;
 }
 html {
     scroll-behavior: smooth;
 }
 body {
-    background-color: #333;
+    background-color: var(--bg);
+    color: var(--text);
 }
 
 /* Manejo de vistas */
@@ -20,53 +26,42 @@ body {
     display: block;
 }
 
-/* Vistas de Completadas y Rechazadas con fondo negro */
-#view-completed {
-    background-color: #1a1a1a;
-    min-height: 100vh;
-    padding: 2rem 0;
-    display: none;
-}
-
-#view-completed.active {
-    display: block;
-}
-
+#view-completed,
 #view-rejected {
-    background-color: #1a1a1a;
+    background-color: var(--bg);
     min-height: 100vh;
     padding: 2rem 0;
     display: none;
 }
 
+#view-completed.active,
 #view-rejected.active {
     display: block;
 }
 
-.pending-tasks {
-    background-color: var(--pastel-yellow);
-    border-top: 4px solid #FFD700;
-}
-.completed-tasks {
-    background-color: var(--pastel-green);
-    border-top: 4px solid #28a745;
-}
+.pending-tasks,
+.completed-tasks,
 .rejected-tasks {
-    background-color: var(--pastel-red);
-    border-top: 4px solid #dc3545;
+    background-color: transparent;
+    border-top: 4px solid rgba(255, 255, 255, 0.12);
 }
 .card {
     margin-bottom: 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: var(--text);
 }
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 .card-header {
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: transparent;
     font-weight: 600;
+    color: var(--text);
 }
 
 /* Estilos para grid de tareas en vista completa */
@@ -82,17 +77,16 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    border: none;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text);
 }
 
-.task-card-completed {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-}
-
+.task-card-completed,
 .task-card-rejected {
-    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
-    color: white;
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
 }
 
 .task-card:hover {
@@ -101,7 +95,7 @@ body {
 }
 
 .task-card h6 {
-    color: white;
+    color: var(--text);
     font-weight: bold;
     margin-bottom: 0.75rem;
 }
@@ -143,9 +137,54 @@ body {
 #filter-completed-input:focus,
 #filter-rejected-input:focus {
     background-color: #333;
-    border-color: #28a745;
+    border-color: var(--accent);
     color: white;
-    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(92, 125, 255, 0.25);
+}
+
+.view-container h3,
+.view-container h5,
+.view-container .card-title,
+.view-container .card-header h5 {
+    color: var(--text);
+}
+
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-soft);
+    border-color: var(--accent-soft);
+}
+
+.task-card-completed {
+    background-color: var(--surface-strong);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.task-card-rejected {
+    background-color: var(--surface-strong);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.task-card h6 {
+    color: var(--text);
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+}
+
+.task-card .text-muted {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.task-card small {
+    color: rgba(255, 255, 255, 0.75);
 }
 
 /* Media queries para responsive */
