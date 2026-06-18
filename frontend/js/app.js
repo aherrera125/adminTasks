@@ -3,6 +3,15 @@ let allTasks = [];
 let filteredCompletedTasks = [];
 let filteredRejectedTasks = [];
 
+// Variables para paginación
+const ITEMS_PER_PAGE = 12;
+let currentCompletedPage = 1;
+let currentRejectedPage = 1;
+
+// Variables para rastrear términos de búsqueda anteriores
+let lastCompletedSearchText = '';
+let lastRejectedSearchText = '';
+
 // Función para determinar el inicio y fin de la semana en curso
 function getCurrentWeekRange() {
   const today = new Date();
@@ -170,8 +179,8 @@ function renderTaskGroup(taskList, containerId, isAllView = false) {
   });
 }
 
-// Función para renderizar todas las tareas en vista completa (grid)
-function renderAllTasksView(taskList, containerId) {
+// Función para renderizar todas las tareas en vista completa (grid) con paginación
+function renderAllTasksView(taskList, containerId, paginationContainerId) {
   const container = document.getElementById(containerId);
   if (!container) {
     return;
@@ -181,16 +190,37 @@ function renderAllTasksView(taskList, containerId) {
 
   if (taskList.length === 0) {
     container.innerHTML = '<p class="text-muted text-center p-2rem">No hay tareas</p>';
+    // Limpiar paginación si existe
+    if (paginationContainerId) {
+      const paginationContainer = document.getElementById(paginationContainerId);
+      if (paginationContainer) {
+        paginationContainer.innerHTML = '';
+      }
+    }
     return;
   }
 
   // Ordenar por fecha
   const sortedTasks = sortByDueDate([...taskList]);
 
+  // Determinar página actual basada en el contenedor
+  let currentPage = 1;
+  if (containerId === 'all-completed-tasks-container') {
+    currentPage = currentCompletedPage;
+  } else if (containerId === 'all-rejected-tasks-container') {
+    currentPage = currentRejectedPage;
+  }
+
+  // Calcular índices para paginación
+  const totalPages = Math.ceil(sortedTasks.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedTasks = sortedTasks.slice(startIndex, endIndex);
+
   const gridContainer = document.createElement('div');
   gridContainer.className = 'tasks-grid';
 
-  sortedTasks.forEach(task => {
+  paginatedTasks.forEach(task => {
     const taskCard = document.createElement('div');
     // Determinar la clase según si es completada o rechazada
     const isCompleted = task.status === 'completed';
@@ -222,6 +252,66 @@ function renderAllTasksView(taskList, containerId) {
   });
 
   container.appendChild(gridContainer);
+
+  // Renderizar paginación si existe el contenedor
+  if (paginationContainerId) {
+    renderPagination(totalPages, currentPage, paginationContainerId, containerId);
+  }
+}
+
+// Función para renderizar botones de paginación
+function renderPagination(totalPages, currentPage, paginationContainerId, tasksContainerId) {
+  const paginationContainer = document.getElementById(paginationContainerId);
+  if (!paginationContainer) {
+    return;
+  }
+
+  paginationContainer.innerHTML = '';
+
+  // Botón anterior
+  const prevButton = document.createElement('button');
+  prevButton.className = 'pagination-button';
+  prevButton.textContent = '← Anterior';
+  prevButton.disabled = currentPage === 1;
+  prevButton.dataset.page = currentPage - 1;
+  prevButton.dataset.container = tasksContainerId;
+  prevButton.addEventListener('click', handlePageClick);
+  paginationContainer.appendChild(prevButton);
+
+  // Números de página
+  for (let i = 1; i <= totalPages; i++) {
+    const pageButton = document.createElement('button');
+    pageButton.className = `pagination-button ${i === currentPage ? 'active' : ''}`;
+    pageButton.textContent = i;
+    pageButton.dataset.page = i;
+    pageButton.dataset.container = tasksContainerId;
+    pageButton.addEventListener('click', handlePageClick);
+    paginationContainer.appendChild(pageButton);
+  }
+
+  // Botón siguiente
+  const nextButton = document.createElement('button');
+  nextButton.className = 'pagination-button';
+  nextButton.textContent = 'Siguiente →';
+  nextButton.disabled = currentPage === totalPages;
+  nextButton.dataset.page = currentPage + 1;
+  nextButton.dataset.container = tasksContainerId;
+  nextButton.addEventListener('click', handlePageClick);
+  paginationContainer.appendChild(nextButton);
+}
+
+// Función para manejar clicks en botones de paginación
+function handlePageClick(event) {
+  const page = parseInt(event.target.dataset.page, 10);
+  const container = event.target.dataset.container;
+  
+  if (container === 'all-completed-tasks-container') {
+    currentCompletedPage = page;
+    updateCompletedTasksView();
+  } else if (container === 'all-rejected-tasks-container') {
+    currentRejectedPage = page;
+    updateRejectedTasksView();
+  }
 }
 
 // Función para filtrar tareas por título
@@ -240,7 +330,14 @@ function updateCompletedTasksView() {
   const searchText = searchInput ? searchInput.value : '';
   const completedTasks = allTasks.filter(task => task.status === 'completed');
   filteredCompletedTasks = filterTasksByTitle(completedTasks, searchText);
-  renderAllTasksView(filteredCompletedTasks, 'all-completed-tasks-container');
+  
+  // Solo resetear a página 1 si el término de búsqueda cambió
+  if (searchText !== lastCompletedSearchText) {
+    currentCompletedPage = 1;
+    lastCompletedSearchText = searchText;
+  }
+  
+  renderAllTasksView(filteredCompletedTasks, 'all-completed-tasks-container', 'pagination-completed');
 }
 
 // Función para actualizar la vista de tareas rechazadas
@@ -249,7 +346,14 @@ function updateRejectedTasksView() {
   const searchText = searchInput ? searchInput.value : '';
   const rejectedTasks = allTasks.filter(task => task.status === 'rejected');
   filteredRejectedTasks = filterTasksByTitle(rejectedTasks, searchText);
-  renderAllTasksView(filteredRejectedTasks, 'all-rejected-tasks-container');
+  
+  // Solo resetear a página 1 si el término de búsqueda cambió
+  if (searchText !== lastRejectedSearchText) {
+    currentRejectedPage = 1;
+    lastRejectedSearchText = searchText;
+  }
+  
+  renderAllTasksView(filteredRejectedTasks, 'all-rejected-tasks-container', 'pagination-rejected');
 }
 
 // Función para actualizar el estado de una tarea
