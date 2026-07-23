@@ -79,8 +79,8 @@ function renderTasks(tasks) {
   let completedTasks = tasks.filter(task => task.status === 'completed');
   let rejectedTasks = tasks.filter(task => task.status === 'rejected');
 
-  // Ordenar tareas pendientes por fecha de vencimiento descendente
-  pendingTasks = sortByDueDate(pendingTasks, true);
+  // Ordenar tareas pendientes por fecha de vencimiento ascendente
+  pendingTasks = sortByDueDate(pendingTasks);
   completedTasks = sortByDueDate(completedTasks);
   rejectedTasks = sortByDueDate(rejectedTasks);
 
