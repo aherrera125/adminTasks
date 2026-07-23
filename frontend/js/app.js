@@ -53,13 +53,14 @@ async function fetchTasks() {
   }
 }
 
-// Función para ordenar tareas por fecha de vencimiento (ascendente - más próximas a vencer primero)
-function sortByDueDate(tasks) {
+// Función para ordenar tareas por fecha de vencimiento
+function sortByDueDate(tasks, descending = false) {
   return tasks.sort((a, b) => {
     if (!a.due_date && !b.due_date) return 0;
     if (!a.due_date) return 1;
     if (!b.due_date) return -1;
-    return new Date(a.due_date) - new Date(b.due_date);
+    const diff = new Date(a.due_date) - new Date(b.due_date);
+    return descending ? -diff : diff;
   });
 }
 
@@ -78,8 +79,8 @@ function renderTasks(tasks) {
   let completedTasks = tasks.filter(task => task.status === 'completed');
   let rejectedTasks = tasks.filter(task => task.status === 'rejected');
 
-  // Ordenar cada grupo por fecha de vencimiento
-  pendingTasks = sortByDueDate(pendingTasks);
+  // Ordenar tareas pendientes por fecha de vencimiento descendente
+  pendingTasks = sortByDueDate(pendingTasks, true);
   completedTasks = sortByDueDate(completedTasks);
   rejectedTasks = sortByDueDate(rejectedTasks);
 

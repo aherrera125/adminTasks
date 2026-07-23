@@ -45,6 +45,13 @@ body {
     background-color: transparent;
     border-top: 4px solid rgba(255, 255, 255, 0.12);
 }
+
+.pending-tasks small,
+.completed-tasks small,
+.rejected-tasks small {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
 .card {
     margin-bottom: 1rem;
     background-color: var(--surface);
@@ -62,6 +69,10 @@ body {
     background-color: transparent;
     font-weight: 600;
     color: var(--text);
+}
+
+.card small {
+    color: rgba(255, 255, 255, 0.75);
 }
 
 /* Estilos para grid de tareas en vista completa */
@@ -105,7 +116,7 @@ body {
 }
 
 .task-card small {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.75);
 }
 
 .task-card .btn-info {
