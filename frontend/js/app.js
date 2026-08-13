@@ -114,9 +114,9 @@ function renderTaskGroup(taskList, containerId, isAllView = false) {
     if (containerId.includes('pending')) {
       container.innerHTML = '<p class="text-muted">No hay tareas pendientes.</p>';
     } else if (containerId.includes('completed')) {
-      container.innerHTML = '<p class="text-muted">No hay tareas completadas.</p>';
+      container.innerHTML = '<p class="text-white">No hay tareas completadas.</p>';
     } else if (containerId.includes('rejected')) {
-      container.innerHTML = '<p class="text-muted">No hay tareas rechazadas.</p>';
+      container.innerHTML = '<p class="text-white">No hay tareas rechazadas.</p>';
     } else {
       container.innerHTML = '<p class="text-muted">No hay tareas.</p>';
     }

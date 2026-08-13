@@ -1,30 +1,31 @@
 # Admin Tasks 📋
 
-Una aplicación web moderna para gestionar tareas administrativas con una interfaz intuitiva y responsiva. Las tareas se organizan por estado (pendientes, completadas, rechazadas) con vistas dedicadas para cada categoría.
+Una aplicación web para gestionar tareas administrativas con una interfaz oscura, moderna y responsiva. Las tareas se organizan por estado (pendientes, completadas, rechazadas) con vistas dedicadas para cada categoría.
 
 ## ✨ Características principales
 
 ### Frontend
-- **Interfaz moderna y responsiva** con Bootstrap 5
-- **Tres vistas principales:**
-  - 🏠 **Inicio**: Formulario de creación + tareas de la semana en curso (3 columnas)
-  - ✅ **Completadas**: Todas las tareas completadas con filtro en tiempo real
-  - ❌ **Rechazadas**: Todas las tareas rechazadas con filtro en tiempo real
-- **Filtro de búsqueda en tiempo real** en vistas completas
-- **Diseño visual atractivo:**
-  - Formulario destacado en la parte superior
-  - Tarjetas de tareas con gradientes de colores
-  - Fondo oscuro en vistas de historial
-  - Animaciones y efectos hover fluidos
+- **Single page** en JavaScript vanilla + Bootstrap 5 (CDN), sin build step.
+- **Barra de navegación** con tres vistas: 🏠 Inicio, ✅ Completadas y ❌ Rechazadas, más el botón **"Agregar Tarea"** que abre un modal de creación.
+- **Vista Inicio** en tres columnas:
+  - 📋 **Tareas Pendientes**: todas las pendientes.
+  - ✅ **Completadas (Esta Semana)**: solo las completadas con `due_date` dentro de la semana en curso (la semana inicia domingo).
+  - ❌ **Rechazadas (Esta Semana)**: solo las rechazadas de la semana en curso.
+- **Vistas Completadas / Rechazadas** (todas las tareas):
+  - Grid responsivo de tarjetas con gradientes.
+  - **Búsqueda en tiempo real** por título.
+  - **Paginación** de 12 tareas por página con botones Anterior/Siguiente y números de página.
+- **Modal de detalle** de tarea: muestra toda la información, permite **editar la descripción** (solo pendientes) y **cambiar el estado** (completar / rechazar).
+- **Modal de creación** de tarea con validación de campos.
+- **Tema oscuro** basado en variables CSS (`:root`), animaciones y efectos hover.
 
 ### Backend
-- **API REST completa** para gestión de tareas
-- **Arquitectura en capas:**
-  - Controladores
-  - Servicios
-  - Modelos
-- **Base de datos MySQL** con persistencia de datos
-- **Validación de datos** en todas las operaciones
+- **API REST** con Express 5 y arquitectura en capas: `routes` → `controllers` → `services` → `models`.
+- **Persistencia MySQL** con pool de conexiones (`mysql2/promise`).
+- **Validación de datos** en todas las operaciones (campos requeridos, estados válidos, tipos).
+- **Servido estático del frontend**: el backend entrega `index.html`, `js/` y `css/` directamente.
+- **Endpoint de sanity check** `/test-db` para verificar la conexión a la base de datos.
+- ESM (`"type": "module"`), todos los imports incluyen la extensión `.js`.
 
 ## 📁 Estructura del proyecto
 
@@ -32,51 +33,72 @@ Una aplicación web moderna para gestionar tareas administrativas con una interf
 adminTasks/
 ├── backend/
 │   ├── package.json
+│   ├── .ejemplo.env                # Plantilla para crear .env
 │   ├── config/
-│   │   └── db.js                    # Configuración de BD
+│   │   └── db.js                   # Pool de conexión a MySQL (dotenv)
 │   └── src/
-│       ├── app.js                   # Servidor Express
+│       ├── app.js                  # Servidor Express + frontend estático
 │       ├── controllers/
-│       │   └── taskController.js    # Lógica HTTP
+│       │   └── taskController.js   # Lógica HTTP y validaciones
 │       ├── models/
-│       │   └── taskModel.js         # Consultas BD
+│       │   └── taskModel.js        # Consultas SQL (mysql2/promise)
 │       ├── routes/
-│       │   └── taskRoutes.js        # Rutas de API
+│       │   └── taskRoutes.js       # Rutas de la API
 │       └── services/
-│           └── taskService.js       # Capa de servicio
+│           └── taskService.js      # Reglas de negocio
 │
 ├── frontend/
-│   ├── index.html                   # Estructura HTML
-│   ├── package.json
+│   ├── index.html                  # Estructura HTML (una sola página)
+│   ├── package.json                # Solo devDependency http-server (no usar)
 │   ├── js/
-│   │   └── app.js                   # Lógica JavaScript
-│   ├── css/
-│   │   └── style.css                # Estilos centralizados
-│   └── html/                        # Vistas adicionales (opcional)
+│   │   └── app.js                  # Lógica JavaScript (fetch + render)
+│   └── css/
+│       └── style.css               # Estilos centralizados (tema oscuro)
 │
-└── README.md                        # Este archivo
+└── README.md                       # Este archivo
 ```
 
 ## 🚀 Instalación y ejecución
 
 ### Requisitos previos
-- Node.js (v14 o superior)
+- Node.js
 - MySQL (v5.7 o superior)
 - npm (incluido con Node.js)
 
-### Backend
+### 1. Crear la base de datos
 
-1. Entra en la carpeta del backend:
-```bash
-cd backend
+La base de datos y la tabla se crean **manualmente** (no hay script de migración en el repo). Ejecuta en MySQL:
+
+```sql
+CREATE DATABASE IF NOT EXISTS adminTasks;
+USE adminTasks;
+
+CREATE TABLE tasks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  due_date DATE NOT NULL,
+  status ENUM('pending', 'completed', 'rejected') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 ```
 
-2. Instala las dependencias:
+### 2. Configurar el backend
+
+> ⚠️ El backend sirve el frontend estáticamente. La única forma soportada de ejecutar la app es desde la carpeta `backend/`. No uses el `npm start` del frontend (http-server en el puerto 8080): rompería todas las llamadas a `/api/tasks`.
+
 ```bash
+cd backend
 npm install
 ```
 
-3. Crea un archivo `.env` con la configuración:
+Copia la plantilla de entorno y ajusta las credenciales:
+
+```bash
+cp .ejemplo.env .env
+```
+
 ```env
 DB_HOST=localhost
 DB_USER=root
@@ -85,28 +107,26 @@ DB_NAME=adminTasks
 DB_PORT=3306
 ```
 
-4. Ejecuta el servidor:
+### 3. Ejecutar
+
 ```bash
-npm start
+npm run dev    # nodemon, auto-reload
+# o bien: npm start
 ```
 
-El servidor estará disponible en `http://localhost:3000`
+El servidor estará disponible en **http://localhost:3000**.
 
-### Frontend
+### Verificar la base de datos
 
-1. Entra en la carpeta del frontend:
 ```bash
-cd frontend
+curl http://localhost:3000/test-db
 ```
 
-2. Instala las dependencias:
-```bash
-npm install
-```
-
-3. Ejecuta el servidor de desarrollo (si tienes uno configurado) o abre `index.html` directamente en el navegador.
+Debe responder `{ "ok": true, "rows": [{ "1": 1 }] }`.
 
 ## 🔌 API Endpoints
+
+Todos los endpoints responden en JSON con la forma `{ "ok": true, "data": ... }` o `{ "ok": false, "error": ... }`.
 
 ### GET `/api/tasks`
 
@@ -132,7 +152,7 @@ Recupera todas las tareas existentes.
 
 ### POST `/api/tasks`
 
-Crea una nueva tarea.
+Crea una nueva tarea (siempre con estado `pending`).
 
 **Parámetros requeridos (JSON):**
 - `title` (string): Título de la tarea
@@ -178,7 +198,7 @@ Actualiza el estado de una tarea.
 
 **Parámetros:**
 - `id` (number): ID de la tarea
-- `status` (string): Nuevo estado (pending, completed, rejected)
+- `status` (string): Nuevo estado (`pending`, `completed`, `rejected`)
 
 **Cuerpo de ejemplo:**
 ```json
@@ -203,13 +223,17 @@ Actualiza el estado de una tarea.
 }
 ```
 
+**Respuestas de error:**
+- `400` — estado no válido: `{ "ok": false, "error": "Invalid status" }`
+- `404` — tarea inexistente: `{ "ok": false, "error": "Task not found" }`
+
 ### PUT `/api/tasks/:id`
 
-Actualiza los datos de una tarea (descripción).
+Actualiza la descripción de una tarea (único campo editable).
 
 **Parámetros:**
 - `id` (number): ID de la tarea
-- `description` (string): Nueva descripción
+- `description` (string): Nueva descripción (obligatoria, debe ser string)
 
 **Cuerpo de ejemplo:**
 ```json
@@ -218,115 +242,89 @@ Actualiza los datos de una tarea (descripción).
 }
 ```
 
+**Respuesta exitosa (200):** igual que `PUT /:id/status`, con la descripción actualizada.
+
+**Respuestas de error:**
+- `400` — `{ "ok": false, "error": "description is required" }`
+- `404` — `{ "ok": false, "error": "Task not found" }`
+
 ## 🎨 Características del Frontend
 
-### Vista Home (Inicio)
-- **Formulario de creación** en la parte superior
-- **Tres columnas de tareas:**
-  - 📋 Tareas Pendientes (amarillo pastel)
-  - ✅ Tareas Completadas de esta semana (verde)
-  - ❌ Tareas Rechazadas de esta semana (rojo)
-- Cada tarea muestra título, fecha de vencimiento y botón de detalle
+### Vista Inicio
+- Tres columnas de tarjetas: **Pendientes** (todas), **Completadas de esta semana** y **Rechazadas de esta semana**.
+- Cada tarjeta muestra título, fecha de vencimiento (en rojo si ya venció) y botón **Detalle**.
+- Las pendientes se ordenan por fecha de vencimiento ascendente.
+- Semana calculada con `getCurrentWeekRange()` (inicia en domingo, termina el sábado).
 
-### Vista Completadas
-- **Grid responsivo** con todas las tareas completadas
-- **Campo de filtro** para buscar por título en tiempo real
-- **Tarjetas de tareas** con gradiente verde
-- **Información completa**: título, descripción (primeras 100 caracteres), fecha
-
-### Vista Rechazadas
-- **Interfaz similar a Completadas**
-- **Tarjetas de tareas** con gradiente rojo
-- **Fondo oscuro** para mejor visibilidad
-- **Búsqueda en tiempo real**
+### Vista Completadas / Rechazadas
+- Grid responsivo con todas las tareas de ese estado (sin filtro de semana).
+- Campo de búsqueda que filtra por título en tiempo real.
+- Paginación: 12 tareas por página, botones ← Anterior / números / Siguiente →.
+- Cada tarjeta muestra título, descripción (primeros 100 caracteres) y fecha, con botón **Ver Detalle**.
 
 ### Modal de Detalle
-- Muestra información completa de la tarea
-- Permite editar descripción (solo tareas pendientes)
-- Botones para cambiar estado (completar/rechazar)
+- Muestra título, descripción, fecha de vencimiento y estado.
+- **Solo para tareas pendientes**: botones **Editar** (permite modificar y guardar la descripción), **✓ Completada** y **✗ Rechazada**.
 
-## 🎯 Funcionalidades detalladas
+### Modal de Creación
+- Formulario con título, fecha de vencimiento y descripción (todos obligatorios).
+- Al guardar, la tarea se crea como `pending` y las vistas se recargan automáticamente.
 
-### Creación de tareas
-1. Completa título, descripción y fecha
-2. Haz clic en "Crear Tarea"
-3. La tarea aparecerá automáticamente en la columna de pendientes
+## 🎯 Flujo de uso
 
-### Gestión de estado
-1. Haz clic en "Detalle" en cualquier tarea
-2. En el modal, puedes:
-   - Ver información completa
-   - Editar descripción (si está pendiente)
-   - Marcar como completada
-   - Marcar como rechazada
-
-### Búsqueda de tareas
-1. Ve a la sección "Completadas" o "Rechazadas"
-2. Escribe en el campo de búsqueda
-3. Las tareas se filtran en tiempo real por título
-
-### Filtro de semana
-- Las vistas de completadas y rechazadas en el inicio muestran solo tareas de esta semana
-- Las vistas completas (desde el menú) muestran todas las tareas
+1. **Crear una tarea**: clic en "Agregar Tarea" → completar el modal → "Crear Tarea". Aparecerá en la columna de pendientes.
+2. **Ver detalle**: clic en "Detalle" / "Ver Detalle" en cualquier tarea.
+3. **Gestionar una pendiente** (desde el modal): editar descripción, marcarla como completada o rechazada.
+4. **Buscar**: en las vistas Completadas/Rechazadas, escribir en el campo de búsqueda filtra por título al instante.
+5. **Navegar entre páginas**: usar la paginación al pie de las vistas completas.
+6. **Ver el trabajo de la semana**: la vista Inicio muestra solo las completadas/rechazadas de la semana actual.
 
 ## 💾 Dependencias
 
 ### Backend
-- `express` - Framework web
-- `cors` - Control de CORS
-- `dotenv` - Variables de entorno
-- `mysql2` - Driver MySQL
+- `express` — Framework web (v5)
+- `cors` — Control de CORS
+- `dotenv` — Variables de entorno
+- `mysql2` — Driver MySQL (pool de conexiones)
+- `nodemon` — (dev) auto-reload en `npm run dev`
 
 ### Frontend
-- `bootstrap@5.3.0` - Framework CSS
-- JavaScript vanilla - Sin dependencias adicionales
+- `bootstrap@5.3.0` — CSS y JS desde CDN
+- JavaScript vanilla — Sin dependencias adicionales
+- `http-server` — (dev, **no usar**: rompe las llamadas a la API)
 
 ## 📝 Notas de desarrollo
 
-### Organización de CSS
-- Todos los estilos se encuentran centralizados en `frontend/css/style.css`
-- Se usan clases CSS para estilos (sin inline styles)
-- Clases de utilidad disponibles:
-  - `.flex-grow` - flex: 1
-  - `.p-2rem` - padding: 2rem
-  - `.text-white-85` - color: rgba(255, 255, 255, 0.85)
-  - `.text-white-90` - color: rgba(255, 255, 255, 0.9)
+### Ejecución
+- El frontend lo sirve el backend (`backend/src/app.js:16`). Corre siempre desde `backend/`.
+- `config/db.js` lee `.env` desde el directorio de trabajo actual y tiene credenciales de respaldo hardcodeadas: si falta `.env`, se conecta con ellas silenciosamente.
+- `npm test` es un stub (no hay tests) y `build: tsc` es vestigial (no hay tsconfig).
 
-### Gestión de vistas
-- Sistema de vistas con `.view-container` y `.view-container.active`
-- Navegación mediante `data-view` en los links del menú
-- Función `switchView()` para cambiar entre vistas
-
-### Almacenamiento de datos
-- Variable global `allTasks` para cache de tareas
-- `filteredCompletedTasks` y `filteredRejectedTasks` para tareas filtradas
-- Sincronización automática al crear/actualizar tareas
-
-### Cálculo de semana
-- La función `getCurrentWeekRange()` calcula el inicio y fin de la semana en curso
-- Las tareas se comparan con este rango para determinar si pertenecen a la semana actual
+### Estilo y código
+- UI, comentarios y logs en **español**.
+- Hay muchos `console.log` de depuración a propósito, tanto en el backend como en `frontend/js/app.js` — no se deben eliminar salvo que se pida.
+- CSS con variables en `:root`, sistema de vistas mediante `.view-container` / `.view-container.active` y `switchView()`.
+- En el frontend: `allTasks` es el caché global de tareas; `filteredCompletedTasks` y `filteredRejectedTasks` guardan las listas filtradas; `renderAllTasksView()` se encarga de la paginación.
 
 ## 🐛 Solución de problemas
 
 ### El backend no inicia
-- Verifica que MySQL esté ejecutándose
-- Comprueba los valores en `.env`
-- Asegúrate de que el puerto 3000 esté disponible
+- Verifica que MySQL esté ejecutándose.
+- Comprueba los valores en `backend/.env` (o copia `.ejemplo.env`).
+- Asegúrate de que el puerto 3000 esté disponible.
 
-### Las tareas no se guardan
-- Verifica la conexión a la base de datos
-- Revisa la consola del navegador para errores
-- Comprueba los logs del backend
+### Las tareas no se guardan / no aparecen
+- Verifica la conexión a la base de datos con `curl http://localhost:3000/test-db`.
+- Confirma que la base `adminTasks` y la tabla `tasks` existan con la estructura indicada.
+- Revisa la consola del navegador y los logs del backend.
 
-### El filtro no funciona
-- Asegúrate de que estés en la vista completa (Completadas/Rechazadas)
-- Verifica que haya tareas para filtrar
-- Intenta escribir parte del título de una tarea existente
+### El filtro o la paginación no funcionan
+- Asegúrate de estar en la vista completa (Completadas/Rechazadas), no en Inicio.
+- Verifica que haya tareas para filtrar.
 
-## 📧 Contacto y soporte
-
-Para reportar errores o sugerencias, contacta al equipo de desarrollo.
+### El frontend no carga desde el puerto 8080
+- El frontend debe abrirse en `http://localhost:3000` (servido por el backend). No uses el `npm start` de `frontend/`.
 
 ---
 
-**Última actualización**: Mayo 2026
+**Última actualización**: Agosto 2026
