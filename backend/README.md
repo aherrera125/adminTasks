@@ -7,7 +7,6 @@ API REST para la gestión de tareas administrativas, construida con **Express 5*
 - **Express 5** - Framework web
 - **mysql2/promise** - Driver MySQL con pool de conexiones
 - **dotenv** - Variables de entorno
-- **cors** - Control de CORS
 - **nodemon** - Recarga automática en desarrollo (devDependency)
 
 ## Estructura
@@ -222,4 +221,4 @@ Comprueba la conexión a la base de datos.
 - El backend es ESM (`"type": "module"`); todos los imports internos incluyen la extensión `.js`.
 - Los mensajes de error de la API y los logs del servidor están en español e inglés mezclados según el endpoint; no cambiar ese comportamiento.
 - Los `console.log` de depuración en `taskController.js` y `taskModel.js` son intencionales y deben dejarse en su lugar.
-- `npm run build` (tsc) y `npm test` son stubs vestigiales; no hay TypeScript real ni tests en este repo.
+- No hay scripts de build ni tests en este proyecto JavaScript.

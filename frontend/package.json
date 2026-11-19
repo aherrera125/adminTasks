@@ -3,14 +3,9 @@
   "version": "1.0.0",
   "description": "Frontend for adminTasks",
   "main": "index.html",
-  "scripts": {
-    "start": "npx http-server -a localhost -p 8080 -c-1",
-    "dev": "npx http-server -a localhost -p 8080 -c-1"
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "http-server": "^14.1.1"
-  }
+  "devDependencies": {}
 }
