@@ -1,7 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
-import cors from 'cors';
 import taskRoutes from './routes/taskRoutes.js';
 import { pool } from '../config/db.js';
 
@@ -11,14 +10,18 @@ const frontendPath = path.join(__dirname, '../../frontend');
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
 app.use(express.static(frontendPath));
 app.use('/api/tasks', taskRoutes);
 
 app.get('/test-db', async (req, res) => {
-  const [rows] = await pool.query('SELECT 1');
-  res.json({ ok: true, rows });
+  try {
+    const [rows] = await pool.query('SELECT 1');
+    res.json({ ok: true, rows });
+  } catch (error) {
+    console.error('Error comprobando la base de datos:', error);
+    res.status(503).json({ ok: false, error: 'No se pudo conectar a la base de datos' });
+  }
 });
 
 app.listen(3000, () => {

@@ -2,14 +2,13 @@
 
 Interfaz de una sola página para la gestión de tareas administrativas, construida con **JavaScript vanilla** y **Bootstrap 5** (desde CDN), sin paso de build. La UI muestra las tareas por estado (pendientes, completadas, rechazadas) con vistas dedicadas, búsqueda en tiempo real, paginación y modales para crear/editar/actualizar tareas.
 
-> El frontend **no** se ejecuta por separado: lo sirve estáticamente el backend (`backend/src/app.js`). Ejecuta `npm run dev` dentro de `backend/` y abre `http://localhost:3000`. El `npm start` del frontend (http-server en el puerto 8080) rompe todas las llamadas a `/api/tasks` — no usarlo.
+> El frontend **no** se ejecuta por separado: lo sirve estáticamente el backend (`backend/src/app.js`). Ejecuta `npm run dev` dentro de `backend/` y abre `http://localhost:3000`.
 
 ## Tecnologías
 
 - **JavaScript vanilla** (ES6+) - Sin frameworks
 - **Bootstrap 5.3.0** - CSS y JS desde CDN
 - **CSS personalizado** - Tema oscuro con variables CSS
-- **http-server** - DevDependency vestigial (no usar, ver nota de arriba)
 
 ## Estructura
 

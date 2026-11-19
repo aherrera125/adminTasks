@@ -12,6 +12,24 @@ let currentRejectedPage = 1;
 let lastCompletedSearchText = '';
 let lastRejectedSearchText = '';
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function parseLocalDate(value) {
+  if (!value) return null;
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(value);
+}
+
 // Función para determinar el inicio y fin de la semana en curso
 function getCurrentWeekRange() {
   const today = new Date();
@@ -30,7 +48,8 @@ function getCurrentWeekRange() {
 // Función para verificar si una tarea pertenece a la semana en curso
 function isTaskFromCurrentWeek(task) {
   if (!task.due_date) return false;
-  const taskDate = new Date(task.due_date);
+  const taskDate = parseLocalDate(task.due_date);
+  if (Number.isNaN(taskDate?.getTime())) return false;
   const { weekStart, weekEnd } = getCurrentWeekRange();
   return taskDate >= weekStart && taskDate <= weekEnd;
 }
@@ -50,6 +69,10 @@ async function fetchTasks() {
     renderTasks(allTasks);
   } catch (error) {
     console.error('Error al obtener tareas:', error);
+    const pendingContainer = document.getElementById('pending-tasks-container');
+    if (pendingContainer) {
+      pendingContainer.innerHTML = '<p class="text-danger">No se pudieron cargar las tareas. Verifica el servidor y la conexión a MySQL.</p>';
+    }
   }
 }
 
@@ -139,14 +162,15 @@ function renderTaskGroup(taskList, containerId, isAllView = false) {
     let cardContent = '';
     if (isPending) {
       // Solo nombre, fecha y botón Detalle para tareas pendientes
-      const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
-      const dueDateClass = task.due_date ? (new Date(task.due_date) < new Date() ? 'text-danger fw-bold' : 'text-muted') : 'text-muted';
+      const taskDueDate = parseLocalDate(task.due_date);
+      const dueDate = taskDueDate && !Number.isNaN(taskDueDate.getTime()) ? taskDueDate.toLocaleDateString('es-ES') : 'Sin fecha';
+      const dueDateClass = taskDueDate && !Number.isNaN(taskDueDate.getTime()) && taskDueDate < new Date() ? 'text-danger fw-bold' : 'text-muted';
       
       cardContent = `
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start">
             <div class="flex-grow">
-              <h6 class="card-title mb-2">${task.title}</h6>
+              <h6 class="card-title mb-2">${escapeHtml(task.title)}</h6>
               <small class="${dueDateClass}">📅 ${dueDate}</small>
             </div>
             <button type="button" class="btn btn-info btn-sm ms-2 task-detail-button">Detalle</button>
@@ -154,14 +178,15 @@ function renderTaskGroup(taskList, containerId, isAllView = false) {
         </div>
       `;
     } else if (isCompleted || isRejected) {
-      const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
-      const dueDateClass = task.due_date ? (new Date(task.due_date) < new Date() ? 'text-danger fw-bold' : 'text-muted') : 'text-muted';
+      const taskDueDate = parseLocalDate(task.due_date);
+      const dueDate = taskDueDate && !Number.isNaN(taskDueDate.getTime()) ? taskDueDate.toLocaleDateString('es-ES') : 'Sin fecha';
+      const dueDateClass = taskDueDate && !Number.isNaN(taskDueDate.getTime()) && taskDueDate < new Date() ? 'text-danger fw-bold' : 'text-muted';
       
       cardContent = `
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start">
             <div class="flex-grow">
-              <h6 class="card-title mb-2">${task.title}</h6>
+              <h6 class="card-title mb-2">${escapeHtml(task.title)}</h6>
               <small class="${dueDateClass}">📅 ${dueDate}</small>
             </div>
             <button type="button" class="btn btn-info btn-sm ms-2 task-detail-button">Detalle</button>
@@ -214,6 +239,19 @@ function renderAllTasksView(taskList, containerId, paginationContainerId) {
 
   // Calcular índices para paginación
   const totalPages = Math.ceil(sortedTasks.length / ITEMS_PER_PAGE);
+  if (totalPages === 0) {
+    return;
+  }
+  if (containerId === 'all-completed-tasks-container') {
+    currentCompletedPage = Math.min(currentPage, totalPages);
+  } else if (containerId === 'all-rejected-tasks-container') {
+    currentRejectedPage = Math.min(currentPage, totalPages);
+  }
+  currentPage = containerId === 'all-completed-tasks-container'
+    ? currentCompletedPage
+    : containerId === 'all-rejected-tasks-container'
+      ? currentRejectedPage
+      : currentPage;
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedTasks = sortedTasks.slice(startIndex, endIndex);
@@ -228,14 +266,16 @@ function renderAllTasksView(taskList, containerId, paginationContainerId) {
     const cardClass = isCompleted ? 'task-card task-card-completed' : 'task-card task-card-rejected';
     taskCard.className = cardClass;
     
-    const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
-    const isDueDatePassed = task.due_date && new Date(task.due_date) < new Date();
+    const taskDueDate = parseLocalDate(task.due_date);
+    const dueDate = taskDueDate && !Number.isNaN(taskDueDate.getTime()) ? taskDueDate.toLocaleDateString('es-ES') : 'Sin fecha';
+    const isDueDatePassed = taskDueDate && !Number.isNaN(taskDueDate.getTime()) && taskDueDate < new Date();
     const dueDateClass = isDueDatePassed ? 'text-danger fw-bold' : 'text-muted';
+    const description = String(task.description ?? '');
 
     taskCard.innerHTML = `
       <div>
-        <h6 class="fw-bold mb-2">${task.title}</h6>
-        <p class="small mb-2 text-white-85">${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}</p>
+        <h6 class="fw-bold mb-2">${escapeHtml(task.title)}</h6>
+        <p class="small mb-2 text-white-85">${escapeHtml(description.substring(0, 100))}${description.length > 100 ? '...' : ''}</p>
         <small class="text-white-90">📅 ${dueDate}</small>
       </div>
       <div class="mt-3">
@@ -399,8 +439,9 @@ function openTaskDetail(taskId, title, description, dueDate, status) {
 function renderTaskDetailModal() {
   if (!currentModalTask) return;
 
-  const dueDateFormatted = currentModalTask.dueDate ? new Date(currentModalTask.dueDate).toLocaleDateString('es-ES') : 'Sin fecha';
-  const isDueDatePassed = currentModalTask.dueDate && new Date(currentModalTask.dueDate) < new Date();
+  const taskDueDate = parseLocalDate(currentModalTask.dueDate);
+  const dueDateFormatted = taskDueDate && !Number.isNaN(taskDueDate.getTime()) ? taskDueDate.toLocaleDateString('es-ES') : 'Sin fecha';
+  const isDueDatePassed = taskDueDate && !Number.isNaN(taskDueDate.getTime()) && taskDueDate < new Date();
   const isPending = currentModalTask.status === 'pending';
 
   const content = `
@@ -427,7 +468,7 @@ function renderTaskDetailModal() {
 
   const descriptionContainer = document.getElementById('taskDescriptionContainer');
   if (currentModalEditing) {
-    descriptionContainer.innerHTML = `<textarea id="taskDescriptionInput" class="form-control" rows="4">${currentModalTask.description}</textarea>`;
+    descriptionContainer.innerHTML = `<textarea id="taskDescriptionInput" class="form-control" rows="4">${escapeHtml(currentModalTask.description)}</textarea>`;
   } else {
     const paragraph = document.createElement('p');
     paragraph.textContent = currentModalTask.description;

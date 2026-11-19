@@ -49,7 +49,7 @@ adminTasks/
 │
 ├── frontend/
 │   ├── index.html                  # Estructura HTML (una sola página)
-│   ├── package.json                # Solo devDependency http-server (no usar)
+│   ├── package.json                # Sin scripts ni dependencias de servidor
 │   ├── js/
 │   │   └── app.js                  # Lógica JavaScript (fetch + render)
 │   └── css/
@@ -86,7 +86,7 @@ CREATE TABLE tasks (
 
 ### 2. Configurar el backend
 
-> ⚠️ El backend sirve el frontend estáticamente. La única forma soportada de ejecutar la app es desde la carpeta `backend/`. No uses el `npm start` del frontend (http-server en el puerto 8080): rompería todas las llamadas a `/api/tasks`.
+> ⚠️ El backend sirve el frontend estáticamente. La única forma soportada de ejecutar la app es desde la carpeta `backend/`. No ejecutes el frontend por separado en el puerto 8080: rompería todas las llamadas a `/api/tasks`.
 
 ```bash
 cd backend
@@ -283,7 +283,6 @@ Actualiza la descripción de una tarea (único campo editable).
 
 ### Backend
 - `express` — Framework web (v5)
-- `cors` — Control de CORS
 - `dotenv` — Variables de entorno
 - `mysql2` — Driver MySQL (pool de conexiones)
 - `nodemon` — (dev) auto-reload en `npm run dev`
@@ -291,14 +290,12 @@ Actualiza la descripción de una tarea (único campo editable).
 ### Frontend
 - `bootstrap@5.3.0` — CSS y JS desde CDN
 - JavaScript vanilla — Sin dependencias adicionales
-- `http-server` — (dev, **no usar**: rompe las llamadas a la API)
 
 ## 📝 Notas de desarrollo
 
 ### Ejecución
 - El frontend lo sirve el backend (`backend/src/app.js:16`). Corre siempre desde `backend/`.
-- `config/db.js` lee `.env` desde el directorio de trabajo actual y tiene credenciales de respaldo hardcodeadas: si falta `.env`, se conecta con ellas silenciosamente.
-- `npm test` es un stub (no hay tests) y `build: tsc` es vestigial (no hay tsconfig).
+- `config/db.js` carga `backend/.env` explícitamente y exige `DB_PASSWORD`. Si falta la configuración, el servidor muestra un error claro al iniciar.
 
 ### Estilo y código
 - UI, comentarios y logs en **español**.
